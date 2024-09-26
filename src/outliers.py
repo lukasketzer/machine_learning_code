@@ -18,9 +18,10 @@ from dataset import *
 
 figure()
 title("Wine: Boxplot")
-boxplot(X)
+boxplot(Y2[:ORIGINAL_DATA_COUNT])
 xticks(range(1, M + 1), attributeNames, rotation=45)
-
+show()
+exit(1)
 
 
 # From this it is clear that there are some outliers in the Alcohol

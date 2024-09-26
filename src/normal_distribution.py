@@ -10,7 +10,7 @@ figs, ax = plt.subplots(4, 5)
 
 for i, n in enumerate(attributeNames):
     # Y2 = Y2[:ORIGINAL_DATA_COUNT]
-    data = X[:, i]
+    data = Y2[:, i]
     N = len(data)
 
     nbins = min(N, 20)
