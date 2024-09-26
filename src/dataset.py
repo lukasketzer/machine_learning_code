@@ -5,11 +5,11 @@ from scipy.linalg import svd
 
 filename = "./data.csv"
 df = pd.read_csv(filename)
-# df = df.drop("SMOKE")
-# df = df.drop("FAVC")
-# df = df.drop("FCVC")
-# # df = df.drop("NCP")
-# df = df.drop("CAEC")
+df = df.drop("SMOKE", axis=1)
+df = df.drop("FAVC", axis=1)
+df = df.drop("FCVC", axis=1)
+# df = df.drop("NCP")
+df = df.drop("CAEC", axis=1)
 
 rawData = df.values
 cols = range(0, len(rawData[0]))
