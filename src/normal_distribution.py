@@ -4,15 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-# Number of samples
-N = 200
 
 
 figs, ax = plt.subplots(4, 5)
 
 for i, n in enumerate(attributeNames):
     # Y2 = Y2[:ORIGINAL_DATA_COUNT]
-    data = Y2[:, i]
+    data = X[:, i]
     N = len(data)
 
     nbins = min(N, 20)

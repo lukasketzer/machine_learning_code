@@ -5,11 +5,16 @@ from scipy.linalg import svd
 
 filename = "./data.csv"
 df = pd.read_csv(filename)
+df = df.drop("SMOKE")
+df = df.drop("FAVC")
+df = df.drop("FCVC")
+# df = df.drop("NCP")
+df = df.drop("CAEC")
+
 rawData = df.values
 cols = range(0, len(rawData[0]))
 ORIGINAL_DATA_COUNT = 485
 
-# TODO: überarbeiten
 
 # Sorted the occurences of the attributes in a logical order
 sortedAttributes = {
