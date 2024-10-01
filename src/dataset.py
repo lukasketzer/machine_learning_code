@@ -1,7 +1,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 from scipy.linalg import svd
+
+font = {'size'   : 12}
+
+matplotlib.rc('font', **font)
 
 filename = "./data.csv"
 df = pd.read_csv(filename)
@@ -10,6 +15,8 @@ df = df.drop("FAVC", axis=1)
 df = df.drop("FCVC", axis=1)
 # df = df.drop("NCP")
 df = df.drop("CAEC", axis=1)
+df = df.drop("SCC", axis=1)
+# df = df.drop("TUE", axis=1)
 
 rawData = df.values
 cols = range(0, len(rawData[0]))
@@ -55,6 +62,7 @@ Those need to be turned into numbers
 """
 # problematic_columns = [n for n, i in enumerate(rawData[0]) if type(i) == str] # list of columns that are not numbers but strings
 cleanData = np.empty_like(rawData)
+labels = []
 
 for i, n in enumerate(rawData[0]):
     classLabels = rawData[:, i]  # 
@@ -68,13 +76,15 @@ for i, n in enumerate(rawData[0]):
         cleanData[:, i] = rawData[:, i]
         # classDict = dict(zip(classNames, classNames))
         classDict = {}
+
     else:
         classDict = dict(zip(classNames, range(len(classNames))))
-        y = np.array(
+        y2 = np.array(
             [classDict[cl] for cl in classLabels]
         )  # assigns numbers to the differen strings / values
-        cleanData[:, i] = y
+        cleanData[:, i] = y2
 
+    labels.append(classDict)
 
 X = cleanData[:, cols].astype(float)
 N, M = X.shape
