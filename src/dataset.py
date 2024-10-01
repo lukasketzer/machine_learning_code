@@ -95,5 +95,5 @@ Y = X - np.ones((N, 1)) * X.mean(
     axis=0
 )  # axis = 0 is the vertical axis on a coordinate-system
 
-# normalization
+# standardization
 Y2 = Y * (1 / np.std(Y, axis=0, ddof=1))
