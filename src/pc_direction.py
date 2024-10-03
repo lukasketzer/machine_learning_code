@@ -11,18 +11,18 @@ V = Vh.T
     way to plot them or interpret them in terms of the features),
 """
 # chosen pcs
-pcs = range(0, 7)
+pcs = range(0, 5)
 legendStrs = ["PC" + str(e + 1) for e in pcs]
 c = ["r", "g", "b"]
 # bw = 0.2
-bw = 0.11 # bar width
+bw = 0.15 # bar width
 r = np.arange(1, M + 1)
 for i in pcs:
     plt.bar(r + i * bw, V[:, i], width=bw)
 plt.xticks(r + bw, attributeNames, rotation=45)
 plt.xlabel("Attributes")
 plt.ylabel("Component coefficients")
-plt.legend(legendStrs)
+plt.legend(legendStrs, fontsize=16)
 plt.grid()
 plt.title("Obesity: PCA Component Coefficients")
 plt.show()
