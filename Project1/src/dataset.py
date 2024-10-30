@@ -8,7 +8,7 @@ font = {'size'   : 12}
 
 matplotlib.rc('font', **font)
 
-filename = "./data.csv"
+filename = "../../data/data.csv"
 df = pd.read_csv(filename)
 df = df.drop("SMOKE", axis=1)
 df = df.drop("FAVC", axis=1)
