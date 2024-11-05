@@ -63,6 +63,7 @@ class Dataset:
 
         X_raw = rawData[:, cols]
 
+        # ========== One-Hot-Encoding ===========
         """
         Data needs to be cleand up. In the dataset, values like "Sometimes" or "Car" are used.
         Those need to be turned into numbers
@@ -119,6 +120,7 @@ class Dataset:
 
 if __name__ == "__main__":
     dataset = Dataset(original_data=True)
+    print(dataset.M)
     # SVD
     U, S, Vh = svd(dataset.X_mean_std, full_matrices=False)
     V = Vh.T
