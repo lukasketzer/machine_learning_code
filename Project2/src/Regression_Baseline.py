@@ -2,23 +2,26 @@
 
 import csv
 import numpy as np
-
+from Dataset import Dataset
 # read file
-with open(r'..\..\data\data.csv', mode='r', newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-    first_row_flag = True
-    # read data into np.array as float
-    column = 3
-    weight_column = []
-    for row in reader:
-        if(first_row_flag):
-            first_row_flag = False
-            continue
-        weight_column.append(float(row[column]))
-        
-    # calculate baseline == mean
-    mean = np.mean(np.array(weight_column))
-    print(f"the baseline for column {column} without (!) a testset is:")
-    print(mean)
-    
-    function = lambda _: mean
+
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+dataset = Dataset()
+
+attribute_to_predict = 3
+
+y = dataset.X_raw[:, attribute_to_predict]
+X = np.zeros_like(y)
+X = X.reshape(-1, 1)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+lm = LinearRegression(fit_intercept=True)
+lm.fit(X_train, y_train)
+
+y_pred = lm.predict(X_test)
+
+
