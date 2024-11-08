@@ -14,6 +14,9 @@ from dtuimldmtools import dbplotf, train_neural_net, visualize_decision_boundary
 
 from Dataset import Dataset
 
+MAX_ITER = 10000
+N_REPLICATES = 3
+
 def MSE(y_test, y_pred):
     return np.square(y_test - y_pred).sum(axis=0)
 
@@ -35,8 +38,8 @@ def cross_validate(model, X, y, hidden_units, K):
                 loss_fn,
                 X=torch.tensor(X_train, dtype=torch.float),
                 y=torch.tensor(y_train, dtype=torch.long),
-                n_replicates=3,
-                max_iter=100,
+                n_replicates=N_REPLICATES,
+                max_iter=MAX_ITER,
             )
 
             softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
@@ -111,9 +114,10 @@ for train_index, test_index in CV.split(X, y):
         loss_fn,
         X=torch.tensor(X_train, dtype=torch.float),
         y=torch.tensor(y_train, dtype=torch.long),
-        n_replicates=3,
-        max_iter=100,
+        n_replicates=N_REPLICATES,
+        max_iter=MAX_ITER,
     )
+
     softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
     y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
     e = y_test_est != y_test
