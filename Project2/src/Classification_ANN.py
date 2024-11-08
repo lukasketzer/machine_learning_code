@@ -17,6 +17,9 @@ from Dataset import Dataset
 MAX_ITER = 10000
 N_REPLICATES = 3
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+
 def MSE(y_test, y_pred):
     return np.square(y_test - y_pred).sum(axis=0)
 
@@ -93,7 +96,7 @@ model = lambda h: torch.nn.Sequential(
         torch.nn.ReLU(),  # 1st transfer function
         torch.nn.Linear(h, C),  # C logits
         torch.nn.Softmax(dim=1),  # final tranfer function, normalisation of logit output
-    )
+    ).to(device=device)
 
 K = 10
 CV = KFold(n_splits=K, shuffle=True, random_state=20) 
