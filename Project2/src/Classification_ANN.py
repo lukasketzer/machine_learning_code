@@ -39,13 +39,13 @@ def cross_validate(model, X, y, hidden_units, K):
             net, _, _ = train_neural_net(
                 mod,
                 loss_fn,
-                X=torch.tensor(X_train, dtype=torch.float),
-                y=torch.tensor(y_train, dtype=torch.long),
+                X=torch.tensor(X_train, dtype=torch.float).to(device=device),
+                y=torch.tensor(y_train, dtype=torch.long).to(device=device),
                 n_replicates=N_REPLICATES,
                 max_iter=MAX_ITER,
             )
 
-            softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
+            softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
             y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
             # Determine errors
             e = y_test_est != y_test
@@ -115,13 +115,13 @@ for train_index, test_index in CV.split(X, y):
     net, _, _ = train_neural_net(
         mod,
         loss_fn,
-        X=torch.tensor(X_train, dtype=torch.float),
-        y=torch.tensor(y_train, dtype=torch.long),
+        X=torch.tensor(X_train, dtype=torch.float).to(device=device),
+        y=torch.tensor(y_train, dtype=torch.long).to(device=device),
         n_replicates=N_REPLICATES,
         max_iter=MAX_ITER,
     )
 
-    softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
+    softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
     y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
     e = y_test_est != y_test
     e = np.sum(e) / y_train.shape[0]
