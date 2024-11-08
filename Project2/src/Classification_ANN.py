@@ -46,7 +46,7 @@ def cross_validate(model, X, y, hidden_units, K):
             )
 
             softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
-            y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
+            y_test_est = (torch.max(softmax_logits, dim=1)[1]).cpu().data.numpy()
             # Determine errors
             e = y_test_est != y_test
             test_error[f, i] = np.sum(e) / y_test.shape[0]
@@ -122,7 +122,7 @@ for train_index, test_index in CV.split(X, y):
     )
 
     softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
-    y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
+    y_test_est = (torch.max(softmax_logits, dim=1)[1]).cpu().data.numpy()
     e = y_test_est != y_test
     e = np.sum(e) / y_train.shape[0]
     error_data.append([optimal_h, e])
