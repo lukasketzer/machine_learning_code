@@ -17,7 +17,6 @@ from Dataset import Dataset
 MAX_ITER = 10000
 N_REPLICATES = 3
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
 
 def MSE(y_test, y_pred):
@@ -39,14 +38,14 @@ def cross_validate(model, X, y, hidden_units, K):
             net, _, _ = train_neural_net(
                 mod,
                 loss_fn,
-                X=torch.tensor(X_train, dtype=torch.float).to(device=device),
-                y=torch.tensor(y_train, dtype=torch.long).to(device=device),
+                X=torch.tensor(X_train, dtype=torch.float),
+                y=torch.tensor(y_train, dtype=torch.long),
                 n_replicates=N_REPLICATES,
                 max_iter=MAX_ITER,
             )
 
-            softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
-            y_test_est = (torch.max(softmax_logits, dim=1)[1]).cpu().data.numpy()
+            softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
+            y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
             # Determine errors
             e = y_test_est != y_test
             test_error[f, i] = np.sum(e) / y_test.shape[0]
@@ -96,7 +95,7 @@ model = lambda h: torch.nn.Sequential(
         torch.nn.ReLU(),  # 1st transfer function
         torch.nn.Linear(h, C),  # C logits
         torch.nn.Softmax(dim=1),  # final tranfer function, normalisation of logit output
-    ).to(device=device)
+    )
 
 K = 10
 CV = KFold(n_splits=K, shuffle=True, random_state=20) 
@@ -115,13 +114,13 @@ for train_index, test_index in CV.split(X, y):
     net, _, _ = train_neural_net(
         mod,
         loss_fn,
-        X=torch.tensor(X_train, dtype=torch.float).to(device=device),
-        y=torch.tensor(y_train, dtype=torch.long).to(device=device),
+        X=torch.tensor(X_train, dtype=torch.float),
+        y=torch.tensor(y_train, dtype=torch.long),
         n_replicates=N_REPLICATES,
         max_iter=MAX_ITER,
     )
 
-    softmax_logits = net(torch.tensor(X_test, dtype=torch.float).to(device=device))
+    softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
     y_test_est = (torch.max(softmax_logits, dim=1)[1]).cpu().data.numpy()
     e = y_test_est != y_test
     e = np.sum(e) / y_train.shape[0]
