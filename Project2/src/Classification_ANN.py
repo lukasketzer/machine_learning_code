@@ -14,7 +14,7 @@ from dtuimldmtools import dbplotf, train_neural_net, visualize_decision_boundary
 
 from Dataset import Dataset
 
-MAX_ITER = 10000
+MAX_ITER = 2000
 N_REPLICATES = 3
 
     
@@ -65,9 +65,6 @@ X = dataset.X_mean_std
 y = dataset.y
 # X = X - np.ones((X.shape[0], 1)) * np.mean(X, 0)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-
-
 attributeNames = dataset.attributeNames
 classNames = dataset.classNames
 
@@ -76,15 +73,15 @@ C = len(classNames)
 # Model fitting and prediction
 
 # ## Normalize and compute PCA (change to True to experiment with PCA preprocessing)
-do_pca_preprocessing = False
-if do_pca_preprocessing:
-    Y = stats.zscore(X, 0)
-    U, S, V = np.linalg.svd(Y, full_matrices=False)
-    V = V.T # pca compontents
-    # Components to be included as features
-    k_pca = 2
-    X = X @ V[:, :k_pca]
-    N, M = X.shape
+# do_pca_preprocessing = False
+# if do_pca_preprocessing:
+#     Y = stats.zscore(X, 0)
+#     U, S, V = np.linalg.svd(Y, full_matrices=False)
+#     V = V.T # pca compontents
+#     # Components to be included as features
+#     k_pca = 2
+#     X = X @ V[:, :k_pca]
+#     N, M = X.shape
 
 
 
@@ -102,6 +99,8 @@ CV = KFold(n_splits=K, shuffle=True, random_state=20)
 hidden_units = range(1, 10)
 k = 0
 error_data = []
+
+# Training loop
 for train_index, test_index in CV.split(X, y):
     X_train = X[train_index]
     y_train = y[train_index]
@@ -121,9 +120,9 @@ for train_index, test_index in CV.split(X, y):
     )
 
     softmax_logits = net(torch.tensor(X_test, dtype=torch.float))
-    y_test_est = (torch.max(softmax_logits, dim=1)[1]).cpu().data.numpy()
+    y_test_est = (torch.max(softmax_logits, dim=1)[1]).data.numpy()
     e = y_test_est != y_test
-    e = np.sum(e) / y_train.shape[0]
+    e = np.sum(e) / y_test.shape[0]
     error_data.append([optimal_h, e])
     k += 1
 

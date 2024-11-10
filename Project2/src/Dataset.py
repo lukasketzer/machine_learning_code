@@ -4,6 +4,8 @@ from typing import List
 import pathlib
 import matplotlib.pyplot as plt
 from scipy.linalg import svd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
 class Dataset:
     filename = f"{pathlib.Path(__file__).parent.resolve()}/../../data/data.csv"
@@ -35,22 +37,20 @@ class Dataset:
             "Obesity_Type_III",
         ],
     }
-
+    droppedColumns = ["SMOKE", "FAVC", "FCVC", "CAEC", "SCC"]
 
     def __init__(self, original_data: bool = False):
         df = pd.read_csv(self.filename)
-        df = df.drop("SMOKE", axis=1)
-        df = df.drop("FAVC", axis=1)
-        df = df.drop("FCVC", axis=1)
-        # df = df.drop("NCP")
-        df = df.drop("CAEC", axis=1)
-        df = df.drop("SCC", axis=1)
-        # df = df.drop("TUE", axis=1)
+
+        for col in self.droppedColumns:
+            df = df.drop(col, axis=1)
+
 
         if (original_data):
             rawData = df.values[:self.ORIGINAL_DATA_COUNT]
         else:
             rawData = df.values
+
         cols = range(0, len(rawData[0]))
 
         attributeNames = np.asarray(df.columns[cols]) # names of the columns
@@ -62,6 +62,8 @@ class Dataset:
         y = np.array([classDict[cl] for cl in classLabels])
 
         X_raw = rawData[:, cols]
+
+        
 
         # ========== One-Hot-Encoding ===========
         """
@@ -96,12 +98,10 @@ class Dataset:
 
         X = cleanData[:, cols].astype(float)
         N, M = X.shape
+        # ========= End One Hot Encoding ========
 
         # Subtract the means from the featues
-        X_mean = X - np.ones((N, 1)) * X.mean(
-            axis=0
-        )  # axis = 0 is the vertical axis on a coordinate-system
-
+        X_mean = X - X.mean(axis=0)
         # standardization
         X_mean_std = X_mean * (1 / np.std(X_mean, axis=0, ddof=1))
 
@@ -119,32 +119,31 @@ class Dataset:
 
 
 if __name__ == "__main__":
-    dataset = Dataset(original_data=True)
-    print(dataset.M)
+    dataset = Dataset(original_data=False)
     # SVD
-    U, S, Vh = svd(dataset.X_mean_std, full_matrices=False)
-    V = Vh.T
+    # U, S, Vh = svd(dataset.X_mean_std, full_matrices=False)
+    # V = Vh.T
 
     """
     The amount of variation explained as a function of the number of PCA
     components included, 
     """
-    # Compute variance explained by principal components
-    rho = (S * S) / (S * S).sum()
+    # # Compute variance explained by principal components
+    # rho = (S * S) / (S * S).sum()
     # print(f"S: {S}")
     # print(f"Rho: {rho}")
 
     # Plot variance explained
-    plt.figure()
-    plt.plot(range(1, len(rho) + 1), rho, "x-", label="Individual")
-    plt.plot(range(1, len(rho) + 1), np.cumsum(rho), "o-", label="Cumulative")
-    plt.plot(range(1, len(rho) + 1), [0.7 for _ in rho], label="Threshold", color="gray", linestyle="dashed", lw=2.0)
-    plt.title("Variance explained by principal components")
-    plt.xlabel("Principal component")
-    plt.ylabel("Variance explained")
-    # plt.legend(["Individual", "Cumulative"])
-    plt.legend()
-    plt.grid()
-    plt.show()
+    # plt.figure()
+    # plt.plot(range(1, len(rho) + 1), rho, "x-", label="Individual")
+    # plt.plot(range(1, len(rho) + 1), np.cumsum(rho), "o-", label="Cumulative")
+    # plt.plot(range(1, len(rho) + 1), [0.7 for _ in rho], label="Threshold", color="gray", linestyle="dashed", lw=2.0)
+    # plt.title("Variance explained by principal components")
+    # plt.xlabel("Principal component")
+    # plt.ylabel("Variance explained")
+    # # plt.legend(["Individual", "Cumulative"])
+    # plt.legend()
+    # plt.grid()
+    # plt.show()
 
 
