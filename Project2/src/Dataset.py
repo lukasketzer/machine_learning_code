@@ -120,6 +120,8 @@ class Dataset:
 
 if __name__ == "__main__":
     dataset = Dataset(original_data=False)
+    for i, n in enumerate(dataset.attributeNames):
+        print(i, n)
     # SVD
     # U, S, Vh = svd(dataset.X_mean_std, full_matrices=False)
     # V = Vh.T

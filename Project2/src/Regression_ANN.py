@@ -7,22 +7,64 @@ from Dataset import Dataset
 from scipy import stats
 from scipy.io import loadmat
 from sklearn import model_selection
+from sklearn.metrics import mean_squared_error
 
 from dtuimldmtools import draw_neural_net, train_neural_net
+import tabulate
+
+# Parameters for neural network classifier
+MAX_ITER = 100
+N_REPLICATES = 3  # number of networks trained in each k-fold
+
+
+def cross_validate(model, loss_fn, X, y, hidden_units, K):
+    CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
+    N, M = X.shape
+    test_error = np.empty((K, len(hidden_units)))
+    f = 0
+    for train_index, test_index in CV.split(X, y):
+        #print("Cross Validation has finished %i of %i; relative: %i", f, K, f/K)
+        X_train = X[train_index]
+        y_train = y[train_index]
+        X_test = X[test_index]
+        y_test = y[test_index]
+
+        for i, n_hidden_units in enumerate(hidden_units):
+            mod = lambda: model(n_hidden_units)
+            net, _, _ = train_neural_net(
+                mod,
+                loss_fn,
+                X=(X_train),
+                y=(y_train),
+                n_replicates=N_REPLICATES,
+                max_iter=MAX_ITER,
+            )
+
+            y_test_est = net(X_test)
+            # Determine errors
+            se = (y_test_est.float() - y_test.float()) ** 2  # squared error
+            mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean            
+            test_error[f, i] = mse[0]
+
+        f += 1
+        optimal_h_err = np.min(test_error)
+        optimal_h = hidden_units[np.argmin(np.mean(test_error, axis=0))]
+
+        return (optimal_h_err, optimal_h)
 
 
 # Load Matlab data file and extract variables of interest
-data_set = Dataset()
+data_set = Dataset(original_data=False)
 mat_data = data_set.X_mean_std
 attributeNames = [np.str_(name) for name in data_set.attributeNames]
 print(attributeNames)
+
 parameter_index = 3
 y = mat_data[:, [parameter_index]]  # weight parameter
 X = mat_data[:, np.arange(len(mat_data[0])) != parameter_index] # source: https://stackoverflow.com/questions/19286657/index-all-except-one-item-in-python
 #X = (mat_data[:, :parameter_index].T + mat_data[:, (parameter_index+1):].T).T  # the rest of features
 
 N, M = X.shape
-C = 2
 
 ## Normalize and compute PCA (change to True to experiment with PCA preprocessing)
 do_pca_preprocessing = False
@@ -36,40 +78,24 @@ if do_pca_preprocessing:
     N, M = X.shape
 
 
-# Parameters for neural network classifier
-n_hidden_units = 10  # number of hidden units
-n_replicates = 1  # number of networks trained in each k-fold
-max_iter = 10000
-
 # K-fold crossvalidation
-K = 3  # only three folds to speed up this example
-CV = model_selection.KFold(K, shuffle=True)
+K = 10  # only three folds to speed up this example
+CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
+n_hidden_units_range = range(1,K)
+error_data = []
 
-# Setup figure for display of learning curves and error rates in fold
-summaries, summaries_axes = plt.subplots(1, 2, figsize=(10, 5))
-# Make a list for storing assigned color of learning curve for up to K=10
-color_list = [
-    "tab:orange",
-    "tab:green",
-    "tab:purple",
-    "tab:brown",
-    "tab:pink",
-    "tab:gray",
-    "tab:olive",
-    "tab:cyan",
-    "tab:red",
-    "tab:blue",
-]
+
 # Define the model
-model = lambda: torch.nn.Sequential(
+loss_fn = torch.nn.MSELoss()  # notice how this is now a mean-squared-error loss
+model = lambda n_hidden_units: torch.nn.Sequential(
     torch.nn.Linear(M, n_hidden_units),  # M features to n_hidden_units
     torch.nn.Tanh(),  # 1st transfer function,
     torch.nn.Linear(n_hidden_units, 1),  # n_hidden_units to 1 output neuron
     # no final tranfer function, i.e. "linear output"
 )
-loss_fn = torch.nn.MSELoss()  # notice how this is now a mean-squared-error loss
 
-print("Training model of type:\n\n{}\n".format(str(model())))
+# Training Model
+#print("Training model of type:\n\n{}\n".format(str(model())))
 errors = []  # make a list for storing generalizaition error in each loop
 for k, (train_index, test_index) in enumerate(CV.split(X, y)):
     print("\nCrossvalidation fold: {0}/{1}".format(k + 1, K))
@@ -79,35 +105,49 @@ for k, (train_index, test_index) in enumerate(CV.split(X, y)):
     y_train = torch.Tensor(y[train_index])
     X_test = torch.Tensor(X[test_index, :])
     y_test = torch.Tensor(y[test_index])
+    
+    #print("inner cross validaiton")
+    (optimal_h_err, optimal_h) = cross_validate(model, loss_fn, X_train, y_train, n_hidden_units_range, K)
+    mod = lambda: model(optimal_h)
 
     # Train the net on training data
-    net, final_loss, learning_curve = train_neural_net(
-        model,
+    #net, final_loss, learning_curve = train_neural_net(
+    net, _, _ = train_neural_net(
+        mod,
         loss_fn,
         X=X_train,
         y=y_train,
-        n_replicates=n_replicates,
-        max_iter=max_iter,
+        n_replicates=N_REPLICATES,
+        max_iter=MAX_ITER,
     )
 
-    print("\n\tBest loss: {}\n".format(final_loss))
+    #print("\n\tBest loss: {}\n".format(final_loss))
 
     # Determine estimated class labels for test set
     y_test_est = net(X_test)
 
     # Determine errors and errors
-    se = (y_test_est.float() - y_test.float()) ** 2  # squared error
-    mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
-    errors.append(mse)  # store error rate for current CV fold
+    # se = (y_test_est.float() - y_test.float()) ** 2  # squared error
+    # mse1 = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
+    mse = mean_squared_error(y_test_est.data.numpy(), y_test.data.numpy())
+    errors.append([optimal_h, mse])  # store error rate for current CV fold
 
     # Display the learning curve for the best net in the current fold
-    (h,) = summaries_axes[0].plot(learning_curve, color=color_list[k])
-    h.set_label("CV fold {0}".format(k + 1))
-    summaries_axes[0].set_xlabel("Iterations")
-    summaries_axes[0].set_xlim((0, max_iter))
-    summaries_axes[0].set_ylabel("Loss")
-    summaries_axes[0].set_title("Learning curves")
+    #(h,) = summaries_axes[0].plot(learning_curve, color=color_list[k])
+    #h.set_label("CV fold {0}".format(k + 1))
+    #summaries_axes[0].set_xlabel("Iterations")
+    #summaries_axes[0].set_xlim((0, MAX_ITER))
+    #summaries_axes[0].set_ylabel("Loss")
+    #summaries_axes[0].set_title("Learning curves")
 
+
+table = tabulate.tabulate(
+    errors,
+    headers = ["Optimal amout of hidden units", "Test error"]
+)
+print(table)
+
+"""
 # Display the MSE across folds
 summaries_axes[1].bar(
     np.arange(1, K + 1), np.squeeze(np.asarray(errors)), color=color_list
@@ -142,7 +182,7 @@ axis_range = [np.min([y_est, y_true]) - 1, np.max([y_est, y_true]) + 1]
 plt.plot(axis_range, axis_range, "k--")
 plt.plot(y_true, y_est, "ob", alpha=0.25)
 plt.legend(["Perfect estimation", "Model estimations"])
-plt.title("Alcohol content: estimated versus true value (for last CV-fold)")
+plt.title("Body Weight: estimated versus true value (for last CV-fold)")
 plt.ylim(axis_range)
 plt.xlim(axis_range)
 plt.xlabel("True value")
@@ -152,3 +192,4 @@ plt.grid()
 plt.show()
 
 print("Ran Exercise 8.2.5")
+"""
