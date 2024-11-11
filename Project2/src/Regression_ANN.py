@@ -53,7 +53,7 @@ def cross_validate(model, X, y, hidden_units, K):
 
 
 # Load Matlab data file and extract variables of interest
-data_set = Dataset()
+data_set = Dataset(original_data=False)
 mat_data = data_set.X_mean_std
 attributeNames = [np.str_(name) for name in data_set.attributeNames]
 print(attributeNames)
