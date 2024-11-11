@@ -92,7 +92,7 @@ model = lambda h: torch.nn.Sequential(
 
 K = 10
 CV = KFold(n_splits=K, shuffle=True, random_state=20) 
-hidden_units = range(1, 10)
+hidden_units = range(1, 11)
 k = 0
 error_data = []
 

@@ -79,9 +79,9 @@ if do_pca_preprocessing:
 
 
 # K-fold crossvalidation
-K = 10  # only three folds to speed up this example
+K = 10 #  # only three folds to speed up this example
 CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
-n_hidden_units_range = range(1,K)
+n_hidden_units_range = range(1,K+1)
 error_data = []
 
 
