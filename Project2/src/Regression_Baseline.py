@@ -34,7 +34,7 @@ for train_index, test_index in CV.split(X, y):
 
     y_train_mean = np.mean(y_train)
     y_pred = np.full(y_test.shape, y_train_mean)
-    mse = mean_squared_error(y_test, y_pred) * y_test.shape[0]
+    mse = mean_squared_error(y_test, y_pred)
     print(mse) 
 
 

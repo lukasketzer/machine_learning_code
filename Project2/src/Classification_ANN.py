@@ -14,7 +14,7 @@ from dtuimldmtools import dbplotf, train_neural_net, visualize_decision_boundary
 
 from Dataset import Dataset
 
-MAX_ITER = 2000
+MAX_ITER = 10000
 N_REPLICATES = 3
 
     
