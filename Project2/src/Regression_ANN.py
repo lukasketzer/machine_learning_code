@@ -13,7 +13,7 @@ from dtuimldmtools import draw_neural_net, train_neural_net
 import tabulate
 
 # Parameters for neural network classifier
-MAX_ITER = 100
+MAX_ITER = 5000
 N_REPLICATES = 3  # number of networks trained in each k-fold
 
 
