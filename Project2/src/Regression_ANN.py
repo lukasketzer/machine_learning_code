@@ -7,16 +7,17 @@ from Dataset import Dataset
 from scipy import stats
 from scipy.io import loadmat
 from sklearn import model_selection
+from sklearn.metrics import mean_squared_error
 
 from dtuimldmtools import draw_neural_net, train_neural_net
 import tabulate
 
 # Parameters for neural network classifier
-MAX_ITER = 2000
+MAX_ITER = 100
 N_REPLICATES = 3  # number of networks trained in each k-fold
 
 
-def cross_validate(model, X, y, hidden_units, K):
+def cross_validate(model, loss_fn, X, y, hidden_units, K):
     CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
     N, M = X.shape
     test_error = np.empty((K, len(hidden_units)))
@@ -57,16 +58,13 @@ data_set = Dataset(original_data=False)
 mat_data = data_set.X_mean_std
 attributeNames = [np.str_(name) for name in data_set.attributeNames]
 print(attributeNames)
+
 parameter_index = 3
 y = mat_data[:, [parameter_index]]  # weight parameter
 X = mat_data[:, np.arange(len(mat_data[0])) != parameter_index] # source: https://stackoverflow.com/questions/19286657/index-all-except-one-item-in-python
 #X = (mat_data[:, :parameter_index].T + mat_data[:, (parameter_index+1):].T).T  # the rest of features
 
 N, M = X.shape
-C = 2 # unused at regression
-
-# Normalize data
-X = stats.zscore(X)
 
 ## Normalize and compute PCA (change to True to experiment with PCA preprocessing)
 do_pca_preprocessing = False
@@ -86,21 +84,7 @@ CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
 n_hidden_units_range = range(1,K)
 error_data = []
 
-# Setup figure for display of learning curves and error rates in fold
-summaries, summaries_axes = plt.subplots(1, 2, figsize=(10, 5))
-# Make a list for storing assigned color of learning curve for up to K=10
-color_list = [
-    "tab:orange",
-    "tab:green",
-    "tab:purple",
-    "tab:brown",
-    "tab:pink",
-    "tab:gray",
-    "tab:olive",
-    "tab:cyan",
-    "tab:red",
-    "tab:blue",
-]
+
 # Define the model
 loss_fn = torch.nn.MSELoss()  # notice how this is now a mean-squared-error loss
 model = lambda n_hidden_units: torch.nn.Sequential(
@@ -123,7 +107,7 @@ for k, (train_index, test_index) in enumerate(CV.split(X, y)):
     y_test = torch.Tensor(y[test_index])
     
     #print("inner cross validaiton")
-    (optimal_h_err, optimal_h) = cross_validate(model, X_train, y_train, n_hidden_units_range, K)
+    (optimal_h_err, optimal_h) = cross_validate(model, loss_fn, X_train, y_train, n_hidden_units_range, K)
     mod = lambda: model(optimal_h)
 
     # Train the net on training data
@@ -143,8 +127,9 @@ for k, (train_index, test_index) in enumerate(CV.split(X, y)):
     y_test_est = net(X_test)
 
     # Determine errors and errors
-    se = (y_test_est.float() - y_test.float()) ** 2  # squared error
-    mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
+    # se = (y_test_est.float() - y_test.float()) ** 2  # squared error
+    # mse1 = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
+    mse = mean_squared_error(y_test_est.data.numpy(), y_test.data.numpy())
     errors.append([optimal_h, mse])  # store error rate for current CV fold
 
     # Display the learning curve for the best net in the current fold

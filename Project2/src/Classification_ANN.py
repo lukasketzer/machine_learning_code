@@ -14,14 +14,10 @@ from dtuimldmtools import dbplotf, train_neural_net, visualize_decision_boundary
 
 from Dataset import Dataset
 
-MAX_ITER = 10000
+MAX_ITER = 100
 N_REPLICATES = 3
 
     
-
-def MSE(y_test, y_pred):
-    return np.square(y_test - y_pred).sum(axis=0)
-
 def cross_validate(model, X, y, hidden_units, K):
     CV = KFold(n_splits=K, shuffle=True, random_state=20)
     N, M = X.shape
