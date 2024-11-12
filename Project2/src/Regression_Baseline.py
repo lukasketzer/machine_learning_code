@@ -17,11 +17,11 @@ dataset = Dataset()
 
 attribute_to_predict = 3
 
-
 y = dataset.X_mean_std[:, attribute_to_predict]
+
+print(y.mean())
 X = np.zeros_like(y)
 X = X.reshape(-1, 1)
-print(f"Mean: {np.mean(y)}")
 K = 10
 CV = KFold(n_splits=K, shuffle=True, random_state=20) 
 
@@ -31,11 +31,10 @@ for train_index, test_index in CV.split(X, y):
     X_test = X[test_index]
     y_test = y[test_index]
     
-
     y_train_mean = np.mean(y_train)
     y_pred = np.full(y_test.shape, y_train_mean)
     mse = mean_squared_error(y_test, y_pred)
-    print(mse) 
+    # print(mse) 
 
 
 
