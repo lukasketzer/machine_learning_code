@@ -56,6 +56,8 @@ def cross_validate(model, loss_fn, X, y, hidden_units, K):
 # Load Matlab data file and extract variables of interest
 data_set = Dataset(original_data=False)
 mat_data = data_set.X_mean_std
+# Normalize data
+mat_data = stats.zscore(mat_data)
 attributeNames = [np.str_(name) for name in data_set.attributeNames]
 print(attributeNames)
 
