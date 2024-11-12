@@ -102,8 +102,10 @@ class Dataset:
 
         # Subtract the means from the featues
         X_mean = X - X.mean(axis=0)
+        print(X_mean.mean())
         # standardization
         X_mean_std = X_mean * (1 / np.std(X_mean, axis=0, ddof=1))
+        print(X_mean.mean())
 
         self.X = X
         self.X_mean = X_mean

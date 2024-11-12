@@ -14,7 +14,7 @@ from dtuimldmtools import dbplotf, train_neural_net, visualize_decision_boundary
 
 from Dataset import Dataset
 
-MAX_ITER = 5000
+MAX_ITER = 10000
 N_REPLICATES = 3
 
     
@@ -53,13 +53,16 @@ def cross_validate(model, X, y, hidden_units, K):
         return (optimal_h_err, optimal_h)
 
 
-dataset = Dataset(original_data=False)
+dataset = Dataset(original_data=True)
 
 # Normalize data
 # X = stats.zscore(X)
 # Load Matlab data file and extract variables of interest
-X = stats.zscore(dataset.X_mean_std)
-y = stats.zscore(dataset.y)
+attrbute_to_predict = 11
+X = dataset.X_mean_std
+X = np.delete(X, attrbute_to_predict, 1)
+y = dataset.y
+
 # X = X - np.ones((X.shape[0], 1)) * np.mean(X, 0)
 
 attributeNames = dataset.attributeNames
