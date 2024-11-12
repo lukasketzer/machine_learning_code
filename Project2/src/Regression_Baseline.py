@@ -41,5 +41,9 @@ print("MSE predicted at one:", mean_squared_error(y, y_mean_array))
 
 model = lambda: np.ones(len(y)) * np.mean(y)
 
+def generate_regression_baseline_model(X_train, y_train):
+    model = lambda x: np.ones(len(x)) * np.mean(y_train)
+    return model
+
 
 
