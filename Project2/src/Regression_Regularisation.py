@@ -204,12 +204,16 @@ def generate_regression_regular_model(X_train, y_train):
     # Standardize outer fold based on training set, and save the mean and standard
     # deviations since they're part of the model (they would be needed for
     # making new predictions) - for brevity we won't always store these in the scripts
-    mean_gen  = np.mean(X_train, 0)
-    sigma_gen = np.std(X_train, 0)
+    mean_gen = np.mean(X_train[:, 1:], 0)
+    sigma_gen = np.std(X_train[:, 1:], 0)
 
     # 1: because the first paramter is offest
-    X_train[1:] = (X_train - mean_gen) / sigma
-    X_test[1:]  = (X_test - mean_gen) / sigma
+    # operands could not be broadcast together with shapes (2005,11) (10,10)
+
+
+    # 1: because the first paramter is offest
+    X_train[:, 1:] = (X_train[:, 1:] - mean_gen) / sigma_gen
+    X_test[:, 1:] = (X_test[:, 1:] - mean_gen) / sigma_gen
 
 
     Xty = X_train.T @ y_train
