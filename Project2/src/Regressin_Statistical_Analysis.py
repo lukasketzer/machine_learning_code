@@ -68,7 +68,7 @@ for train_index, test_index in CV.split(X, y):
 # Compute the Correlated Ttest
 stringstore = ["ANN-Baseline", "ANN-Regression", "Baseline-Regression"]
 for i in range(3):
-    p_setupII, CI_setupII = correlated_ttest(r[0], rho, alpha=alpha)
+    p_setupII, CI_setupII = correlated_ttest(r[i], rho, alpha=alpha)
     results[stringstore[i]].append((float(CI_setupII[0]), float(CI_setupII[1]), float(p_setupII)))
 
 with open("output_Regression.txt", "w") as file:
