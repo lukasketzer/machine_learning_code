@@ -13,7 +13,7 @@ from dtuimldmtools import draw_neural_net, train_neural_net
 import tabulate
 
 # Parameters for neural network classifier
-MAX_ITER = 5000
+MAX_ITER = 5_000
 N_REPLICATES = 3  # number of networks trained in each k-fold
 
 
@@ -141,6 +141,17 @@ for k, (train_index, test_index) in enumerate(CV.split(X, y)):
     #summaries_axes[0].set_xlim((0, MAX_ITER))
     #summaries_axes[0].set_ylabel("Loss")
     #summaries_axes[0].set_title("Learning curves")
+    
+def generate_regression_ANN_model(X_train, y_train):
+    net, _, _ = train_neural_net(
+        mod,
+        loss_fn,
+        X=torch.Tensor(X_train),
+        y=torch.Tensor(y_train),
+        n_replicates=N_REPLICATES,
+        max_iter=MAX_ITER,
+    )
+    return lambda x: np.ndarray.flatten(net(torch.Tensor(x)).detach().numpy())
 
 
 table = tabulate.tabulate(

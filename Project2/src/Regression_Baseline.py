@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 def MSE(y_test, y_pred):
     return np.square(y_test - y_pred).sum(axis=0) / y_test.shape[0]
 
-dataset = Dataset()
+dataset = Dataset(original_data=False)
 
 attribute_to_predict = 3
 
@@ -36,8 +36,14 @@ for train_index, test_index in CV.split(X, y):
     mse = mean_squared_error(y_test, y_pred)
     print(mse) 
 
+y_mean_array = np.ones(len(y)) * np.mean(y)
+print("MSE predicted at one:", mean_squared_error(y, y_mean_array))
 
+model = lambda: np.ones(len(y)) * np.mean(y)
 
+def generate_regression_baseline_model(X_train, y_train):
+    model = lambda x: np.ones(len(x)) * np.mean(y_train)
+    return model
 
 
 
