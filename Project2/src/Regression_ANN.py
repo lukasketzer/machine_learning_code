@@ -82,8 +82,9 @@ if do_pca_preprocessing:
 
 # K-fold crossvalidation
 K = 10 #  # only three folds to speed up this example
+N_hidden_units_count = 20
 CV = model_selection.KFold(n_splits=K, shuffle=True, random_state=20)
-n_hidden_units_range = range(1,K+1)
+n_hidden_units_range = range(1,N_hidden_units_count+1) # 20 hidden layers for Regression ANN as 9 produced good results
 error_data = []
 
 
