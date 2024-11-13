@@ -147,5 +147,7 @@ if __name__ == "__main__":
         error_data,
         headers = ["Optimal amout of hidden units", "Test error"]
     )
+    with open("classifictaion_ann_output.txt", "w") as file:
+        file.write(table)
     print(table)
 
