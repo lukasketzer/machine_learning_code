@@ -204,12 +204,12 @@ def generate_regression_regular_model(X_train, y_train):
     # Standardize outer fold based on training set, and save the mean and standard
     # deviations since they're part of the model (they would be needed for
     # making new predictions) - for brevity we won't always store these in the scripts
-    mu[k, :] = np.mean(X_train[:, 1:], 0)
-    sigma[k, :] = np.std(X_train[:, 1:], 0)
+    mean_gen  = np.mean(X_train, 0)
+    sigma_gen = np.std(X_train, 0)
 
     # 1: because the first paramter is offest
-    X_train[:, 1:] = (X_train[:, 1:] - mu[k, :]) / sigma[k, :]
-    X_test[:, 1:] = (X_test[:, 1:] - mu[k, :]) / sigma[k, :]
+    X_train[1:] = (X_train - mean_gen) / sigma
+    X_test[1:]  = (X_test - mean_gen) / sigma
 
 
     Xty = X_train.T @ y_train
@@ -219,7 +219,7 @@ def generate_regression_regular_model(X_train, y_train):
     # Estimate weights for the optimal value of lambda, on entire training set
     lambdaI = opt_lambda * np.eye(M)
     lambdaI[0, 0] = 0  # Do no regularize the bias term
-    w_rlr[:, k] = np.linalg.solve(XtX + lambdaI, Xty).squeeze()
+    w_rlr_gen = np.linalg.solve(XtX + lambdaI, Xty).squeeze()
     
-    #y_test_pred = X_test @ w_rlr[:, k]
-    return lambda X_test: X_test @ w_rlr[:, k]
+    #y_test_pred = X_test @ w_rlr_gen
+    return lambda X_test: X_test @ w_rlr_gen
