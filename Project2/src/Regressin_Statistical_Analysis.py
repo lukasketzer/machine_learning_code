@@ -1,21 +1,21 @@
 # exercise 7.3.1
 import scipy.stats as st
-import sklearn.linear_model
 import sklearn.tree
 
-import numpy as np
 from scipy import stats
+from dtuimldmtools import mcnemar
 from Dataset import Dataset
-from sklearn import model_selection
-
-from dtuimldmtools import *
-from dtuimldmtools.statistics.statistics import correlated_ttest
+import numpy as np
+from sklearn.model_selection import KFold
+import tabulate
+from collections import defaultdict
 
 from Regression_ANN import generate_regression_ANN_model
 from Regression_Baseline import generate_regression_baseline_model
+from Regression_Regularisation import generate_regression_regular_model
 
 loss = 2
-# Load Matlab data file and extract variables of interest
+# Load data file and extract variables of interest
 data_set = Dataset(original_data=False)
 mat_data = data_set.X_mean_std
 # Normalize data
@@ -28,52 +28,78 @@ y = mat_data[:, [parameter_index]]  # weight parameter
 X = mat_data[:, np.arange(len(mat_data[0])) != parameter_index] # source: https://stackoverflow.com/questions/19286657/index-all-except-one-item-in-python
 #X = (mat_data[:, :parameter_index].T + mat_data[:, (parameter_index+1):].T).T  # the rest of features# This script crates predictions from three KNN classifiers using cross-validation
 
-K = 10 # We presently set J=K
-J = K
-m = 1
-r = []
-kf = model_selection.KFold(n_splits=K)
+seed = 20
+K = 20 # Number of folds for cross-validation
 
-for dm in range(m):
-    y_true = []
-    yhat = []
+CV = KFold(n_splits=K, shuffle=True, random_state=seed)
 
-    for train_index, test_index in kf.split(X):
-        X_train, y_train = X[train_index,:], y[train_index]
-        X_test, y_test = X[test_index, :], y[test_index]
 
-        mA = generate_regression_ANN_model(X_train, y_train)
-        mB = generate_regression_baseline_model(X_train, y_train)  # baseline model currently based on complete data
-
-        yhatA = mA(X_test)
-        yhatB = mB(X_test)
-        y_true.append(y_test)
-        print(yhatA)
-        #print(yhatB)
-        yhat.append( np.concatenate([yhatA, yhatB], axis=0) )
-
-        r.append( np.mean( np.abs( yhatA-y_test ) ** loss - np.abs( yhatB-y_test) ** loss ) )
-
-# Initialize parameters and run test appropriate for setup II
+results = defaultdict(list)
+k = 0
 alpha = 0.05
-rho = 1/K
-p_setupII, CI_setupII = correlated_ttest(r, rho, alpha=alpha)
 
-#print("p setup is: ", p_setupII)
-#print("CI is", CI_setupII)
+for train_index, test_index in CV.split(X, y):
+    X_train = X[train_index]
+    y_train = y[train_index]
+    X_test = X[test_index]
+    y_test = y[test_index]
+    
+    mod1 = generate_regression_ANN_model(X_train, y_train)
+    mod2 = generate_regression_baseline_model(X_train, y_train)
+    mod3 = generate_regression_regular_model(X_train, y_train)
+    """
+    mod1 = ClassificationAnn(X_train, y_train, h= 5, max_iter=5000, n_replicates=3)
+    mod2 = ClassificationBaseline(X_train, y_train)
+    mod3 = ClassificationMultinomialRegression(X_train, y_train, 1e-5)
+    """
 
+    # ##########################################
+    #          Baseline vs ANN      #
+    # ##########################################
+ 
+    # Compute the Jeffreys interval
+    yhat = np.empty((X_test.shape[0], 2))
+    yhat[:, 0] = mod1(X_test) #Ann
+    yhat[:, 1] = mod2(X_test) #Baseline
+    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
 
-if m == 1:
-    y_true = np.concatenate(y_true)[:,0]
-    yhat = np.concatenate(yhat)
+    results["BaselineANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
 
-    # note our usual setup I ttest only makes sense if m=1.
-    zA = np.abs(y_true - yhat[:,0] ) ** loss
-    zB = np.abs(y_true - yhat[:,1] ) ** loss
-    z = zA - zB
+    # ##########################################
+    #          Baseline vs LogReg      
+    # ##########################################
+ 
+    # Compute the Jeffreys interval
 
-    CI_setupI = st.t.interval(1 - alpha, len(z) - 1, loc=np.mean(z), scale=st.sem(z))  # Confidence interval
-    p_setupI = st.t.cdf(-np.abs(np.mean(z)) / st.sem(z), df=len(z) - 1)  # p-value
+    yhat = np.empty((X_test.shape[0], 2))
+    yhat[:, 0] = mod2(X_test) #baseline
+    yhat[:, 1] = mod3(X_test) #logreg
+    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
 
-    print("p  setup 2 and 1", p_setupII, p_setupI )
-    print("CI setup 2 and 1", CI_setupII, CI_setupI )
+    results["BaselineLogReg"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
+
+    # ##########################################
+    #          ANN vs LogReg      
+    # ##########################################
+ 
+    # Compute the Jeffreys interval
+
+    yhat = np.empty((X_test.shape[0], 2))
+    yhat[:, 0] = mod1(X_test) # ann
+    yhat[:, 1] = mod3(X_test) # logreg
+    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
+
+    results["LogRegANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
+    k += 1
+
+with open("output.txt", "w") as file:
+    for i in results:
+        print(i)
+        file.write(i)
+        table = tabulate.tabulate(
+            results[i],
+            headers = ["theta hat", "ci", "p-value"]
+        )
+        file.write(table)
+        file.write("\n")
+        print(table)

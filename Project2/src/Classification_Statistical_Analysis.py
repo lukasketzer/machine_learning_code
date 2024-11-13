@@ -38,7 +38,7 @@ for train_index, test_index in CV.split(X, y):
     mod3 = ClassificationMultinomialRegression(X_train, y_train, 1e-5)
 
     # ##########################################
-    #          Baseline vs ANN      #
+    #          Baseline vs ANN                 #
     # ##########################################
  
     # Compute the Jeffreys interval
@@ -50,7 +50,7 @@ for train_index, test_index in CV.split(X, y):
     results["BaselineANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
 
     # ##########################################
-    #          Baseline vs LogReg      
+    #          Baseline vs LogReg              #
     # ##########################################
  
     # Compute the Jeffreys interval
@@ -63,7 +63,7 @@ for train_index, test_index in CV.split(X, y):
     results["BaselineLogReg"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
 
     # ##########################################
-    #          ANN vs LogReg      
+    #          ANN vs LogReg                   #
     # ##########################################
  
     # Compute the Jeffreys interval
