@@ -9,7 +9,9 @@ import warnings
 seed = 20
 
 # Lambda values to test
-lambda_values = [0.01, 0.1, 1, 10, 100, 200, 500, 1000, 2000, 5000]
+# lambda_values = [0.01, 0.1, 1, 10, 100, 200, 500, 1000, 2000, 5000]
+lambda_values = np.power(10, np.arange(-20, -4, 1).astype(float))
+print(f"lambda_values = {lambda_values}")
 
 # Parameters for nested cross-validation
 outer_k = 10   # Number of outer folds
@@ -20,7 +22,8 @@ outer_cv = KFold(n_splits=outer_k, shuffle=True, random_state=seed)
 outer_errors = []  # To store the final error rate for each outer fold
 
 dataset = Dataset()
-X = dataset.X_mean_std # Input data
+X = np.delete(dataset.X_mean_std, 11, 1)  # remove NObeyesidad attribute
+# X = np.delete(dataset.X_mean_std, [3, 11], axis=1)  # remove Weight (3) & NObeyesidad (11) attributes
 y = dataset.y # Corresponding target output
 
 for outer_fold_idx, (train_idx, test_idx) in enumerate(outer_cv.split(X), start=1):
