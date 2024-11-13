@@ -1,9 +1,6 @@
 # exercise 7.3.1
-import scipy.stats as st
-import sklearn.tree
-
 from scipy import stats
-from dtuimldmtools import mcnemar
+from dtuimldmtools.statistics.statistics import correlated_ttest
 from Dataset import Dataset
 import numpy as np
 from sklearn.model_selection import KFold
@@ -37,6 +34,11 @@ CV = KFold(n_splits=K, shuffle=True, random_state=seed)
 results = defaultdict(list)
 k = 0
 alpha = 0.05
+rho = 1/K
+loss = 2
+#y_true = []
+r = [[],[],[]]
+#p_setupII, CI_setupII = correlated_ttest(r, rho, alpha=alpha)
 
 for train_index, test_index in CV.split(X, y):
     X_train = X[train_index]
@@ -52,53 +54,30 @@ for train_index, test_index in CV.split(X, y):
     mod2 = ClassificationBaseline(X_train, y_train)
     mod3 = ClassificationMultinomialRegression(X_train, y_train, 1e-5)
     """
+    
+    yhatA = mod1(X_test) #Ann
+    yhatB = mod2(X_test) #Baseline
+    yhatR = mod3(X_test) #reg
 
-    # ##########################################
-    #          Baseline vs ANN      #
-    # ##########################################
- 
-    # Compute the Jeffreys interval
-    yhat = np.empty((X_test.shape[0], 2))
-    yhat[:, 0] = mod1(X_test) #Ann
-    yhat[:, 1] = mod2(X_test) #Baseline
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
-
-    results["BaselineANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
-
-    # ##########################################
-    #          Baseline vs LogReg      
-    # ##########################################
- 
-    # Compute the Jeffreys interval
-
-    yhat = np.empty((X_test.shape[0], 2))
-    yhat[:, 0] = mod2(X_test) #baseline
-    yhat[:, 1] = mod3(X_test) #logreg
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
-
-    results["BaselineLogReg"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
-
-    # ##########################################
-    #          ANN vs LogReg      
-    # ##########################################
- 
-    # Compute the Jeffreys interval
-
-    yhat = np.empty((X_test.shape[0], 2))
-    yhat[:, 0] = mod1(X_test) # ann
-    yhat[:, 1] = mod3(X_test) # logreg
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
-
-    results["LogRegANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
+    r[0].append(np.mean( np.abs( yhatA-y_test ) ** loss - np.abs( yhatB-y_test) ** loss ))
+    r[1].append(np.mean( np.abs( yhatA-y_test ) ** loss - np.abs( yhatR-y_test) ** loss ))
+    r[2].append(np.mean( np.abs( yhatB-y_test ) ** loss - np.abs( yhatR-y_test) ** loss ))
+    
     k += 1
+    
+# Compute the Correlated Ttest
+stringstore = ["ANN-Baseline", "ANN-Regression", "Baseline-Regression"]
+for i in range(3):
+    p_setupII, CI_setupII = correlated_ttest(r[0], rho, alpha=alpha)
+    results[stringstore[i]].append((float(CI_setupII[0]), float(CI_setupII[1])), float(p_setupII))
 
-with open("output.txt", "w") as file:
+with open("output_Regression.txt", "w") as file:
     for i in results:
         print(i)
         file.write(i)
         table = tabulate.tabulate(
             results[i],
-            headers = ["theta hat", "ci", "p-value"]
+            headers = ["ci", "p-value"]
         )
         file.write(table)
         file.write("\n")
