@@ -2,3 +2,6 @@ __pycache__/
 venv/
 nohup.out
 test.txt
+output?.txt
+output.txt
+output*.txt

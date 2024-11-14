@@ -5,11 +5,18 @@ from Dataset import Dataset
 import numpy as np
 from sklearn.model_selection import KFold
 import tabulate
+import torch
 from collections import defaultdict
 
-from Regression_ANN import generate_regression_ANN_model
-from Regression_Baseline import generate_regression_baseline_model
-from Regression_Regularisation import generate_regression_regular_model
+from Regression_ANN import RegressionAnn
+from Regression_Baseline import RegressionBaseline
+from Regression_Regularisation import RegressionRegularization
+
+# Parameters for neural network classifier
+MAX_ITER = 5000
+N_REPLICATES = 3  # number of networks trained in each k-fold
+
+
 
 loss = 2
 # Load data file and extract variables of interest
@@ -45,19 +52,23 @@ for train_index, test_index in CV.split(X, y):
     y_train = y[train_index]
     X_test = X[test_index]
     y_test = y[test_index]
-    
-    mod1 = generate_regression_ANN_model(X_train, y_train)
-    mod2 = generate_regression_baseline_model(X_train, y_train)
-    mod3 = generate_regression_regular_model(X_train, y_train)
+    # X_train = torch.Tensor(X[train_index, :])
+    # y_train = torch.Tensor(y[train_index])
+    # X_test = torch.Tensor(X[test_index, :])
+    # y_test = torch.Tensor(y[test_index])
+
+    mod1 = RegressionAnn(torch.Tensor(X_train), torch.Tensor(y_train), n_replicates=N_REPLICATES, max_iter=MAX_ITER, h = 5)
+    mod2 = RegressionBaseline(X_train, y_train)
+    mod3 = RegressionRegularization(X_train, y_train, l = 5)
     """
     mod1 = ClassificationAnn(X_train, y_train, h= 5, max_iter=5000, n_replicates=3)
     mod2 = ClassificationBaseline(X_train, y_train)
     mod3 = ClassificationMultinomialRegression(X_train, y_train, 1e-5)
     """
     
-    yhatA = mod1(X_test) #Ann
-    yhatB = mod2(X_test) #Baseline
-    yhatR = mod3(X_test) #reg
+    yhatA = mod1.predict(torch.Tensor(X_test)).data.numpy() #Ann
+    yhatB = mod2.predict(X_test) #Baseline
+    yhatR = mod3.predict(X_test) #reg
 
     r[0].append(np.mean( np.abs( yhatA-y_test ) ** loss - np.abs( yhatB-y_test) ** loss ))
     r[1].append(np.mean( np.abs( yhatA-y_test ) ** loss - np.abs( yhatR-y_test) ** loss ))

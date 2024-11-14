@@ -41,7 +41,7 @@ class RegressionAnn:
             self.model,
             self.loss_fn,
             X=torch.tensor(self.X, dtype=torch.float),
-            y=torch.tensor(self.y, dtype=torch.long),
+            y=torch.tensor(self.y, dtype=torch.float),
             n_replicates=self.n_replicates,
             max_iter=self.max_iter,
         )
