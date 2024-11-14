@@ -23,9 +23,24 @@ y = dataset.y
 
 
 
-results = defaultdict(list)
+results = {
+    "BaselineANN":[[],[],[]],
+    "BaselineLogReg": [[], [],[]],
+    "LogRegANN": [[], [], []]
+}
 k = 0
 alpha = 0.05
+
+def stack(name, y_true, yhat1, yhat2):
+    results[name][0] += list(y_true)
+    results[name][1] += list(yhat1)
+    results[name][2] += list(yhat2)
+    # results[name] = np.vstack(
+    #     (
+    #         results[name],
+    #         np.array((y_true, yhat1, yhat2))
+    #     )
+    # )
 
 for train_index, test_index in CV.split(X, y):
     X_train = X[train_index]
@@ -33,7 +48,7 @@ for train_index, test_index in CV.split(X, y):
     X_test = X[test_index]
     y_test = y[test_index]
 
-    mod1 = ClassificationAnn(X_train, y_train, h= 5, max_iter=5000, n_replicates=3)
+    mod1 = ClassificationAnn(X_train, y_train, h= 5, max_iter=100, n_replicates=3)
     mod2 = ClassificationBaseline(X_train, y_train)
     mod3 = ClassificationMultinomialRegression(X_train, y_train, 1e-5)
 
@@ -45,10 +60,7 @@ for train_index, test_index in CV.split(X, y):
     yhat = np.empty((X_test.shape[0], 2))
     yhat[:, 0] = mod1.predict(X_test) #Ann
     yhat[:, 1] = mod2.predict(X_test) #Baseline
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
-
-    results["BaselineANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
-
+    stack("BaselineANN", y_test, yhat[:, 0], yhat[:, 1])
     # ##########################################
     #          Baseline vs LogReg              #
     # ##########################################
@@ -58,9 +70,9 @@ for train_index, test_index in CV.split(X, y):
     yhat = np.empty((X_test.shape[0], 2))
     yhat[:, 0] = mod2.predict(X_test) #baseline
     yhat[:, 1] = mod3.predict(X_test) #logreg
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
+    stack("BaselineLogReg", y_test, yhat[:, 0], yhat[:, 1])
 
-    results["BaselineLogReg"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
+
 
     # ##########################################
     #          ANN vs LogReg                   #
@@ -71,19 +83,17 @@ for train_index, test_index in CV.split(X, y):
     yhat = np.empty((X_test.shape[0], 2))
     yhat[:, 0] = mod1.predict(X_test) # ann
     yhat[:, 1] = mod3.predict(X_test) # logreg
-    [thetahat, CI, p] = mcnemar(y_test, yhat[:, 0], yhat[:, 1], alpha=alpha)
+    stack("LogRegANN", y_test, yhat[:, 0], yhat[:, 1])
 
-    results["LogRegANN"].append((float(thetahat), (float(CI[0]), float(CI[1])), float(p)))
     k += 1
 
+stringstore = ["BaselineANN", "BaselineLogReg", "LogRegANN"]
+print(results)
+
 with open("output.txt", "w") as file:
-    for i in results:
+    for i in stringstore:
         print(i)
         file.write(i)
-        table = tabulate.tabulate(
-            results[i],
-            headers = ["theta hat", "ci", "p-value"]
-        )
-        file.write(table)
-        file.write("\n")
-        print(table)
+        [thetahat, CI, p] = mcnemar(np.array(results[i][0]), np.array(results[i][1]), np.array(results[i][2]), alpha=alpha)
+        file.write(str([thetahat, CI, p]))
+
