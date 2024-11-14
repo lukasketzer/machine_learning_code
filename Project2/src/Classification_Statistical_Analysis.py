@@ -11,7 +11,7 @@ from collections import defaultdict
 
 
 seed = 20
-K = 20 # Number of folds for cross-validation
+K = 10 # Number of folds for cross-validation
 
 CV = KFold(n_splits=K, shuffle=True, random_state=seed)
 
