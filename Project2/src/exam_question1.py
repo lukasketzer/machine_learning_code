@@ -8,12 +8,14 @@ fpr = np.array([0,1,2,2,2,3,4,4,4]) / 4
 tpr = np.array([0,0,0,1,2,2,2,3,4]) / 4
 plt.title("B")
 plt.plot(fpr, tpr)
+plt.show()
 
 # %%
 fpr = np.array([0,1,1,2,2,2,2,3,4]) / 4
 tpr = np.array([0,0,1,1,2,3,4,4,4]) / 4
 plt.title("A")
 plt.plot(fpr, tpr)
+plt.show()
 
 # %%
 # ROC curve for C
@@ -26,6 +28,7 @@ print(fpr)
 
 #plt.title("C")
 plt.plot(fpr, tpr)
+plt.show()
 
 # %%
 fpr = np.array([0,1,1,2,2,3,3,4,4]) / 4
@@ -36,5 +39,6 @@ plt.title("D")
 plt.ylabel("TPR")
 plt.xlabel("FPR")
 plt.plot(fpr, tpr)
+plt.show()
 
 
